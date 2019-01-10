@@ -4,6 +4,7 @@
 import subprocess
 import sys
 import os
+import time
 
 
 ADB_COMMAND = 'adb'
@@ -24,10 +25,29 @@ def main():
         input('继续安装前请保持手机已连接至电脑，手表端开启蓝牙调试，Wear OS 端打开「通过蓝牙调试」高级选项，回车继续 Ctrl-C 取消: ')
         print('等待手表端点击允许ADB调试...')
         sys.stdout.flush()
+        # Start ADB & Waiting for devices
+        print('Checking if ADB is installed...')
+        output = subprocess.check_output([ADB_COMMAND, 'version'])
+        print(output.decode())
+        print('Starting ADB Server...')
+        output = subprocess.check_output([ADB_COMMAND, 'start-server'])
+        print('Waiting for device to connect...')
+        sys.stdout.flush()
+        output = subprocess.check_output([ADB_COMMAND, 'wait-for-device'])
+        print('Devices Found.')
+        output = subprocess.check_output([ADB_COMMAND, 'devices'])
+        print(output.decode())
+        sys.stdout.flush()
+        
         output = subprocess.check_output([ADB_COMMAND, 'forward', 'tcp:4444', 'localabstract:/adb-hub'])
         output = subprocess.check_output([ADB_COMMAND, 'connect', 'localhost:4444'])
         print('Connected.')
         sys.stdout.flush()
+
+        print('Waiting 5 seconds to start. Ctrl+C to cancel...')
+        sys.stdout.flush()
+        time.sleep(5)
+
         apklist = os.listdir(MICROAPK)
         for file in apklist:
             if file.endswith('.apk'):
